@@ -1,0 +1,12 @@
+# Output contract of the prepare_leadouts_data ETL job: the dataset it writes. Generation-time input;
+# never deployed. Fill in every value shaped like <...>.
+contract:
+  layer: preprocessed
+  dataset: <folder name in the layer's bucket, e.g. orders_per_shop>
+  grain:
+    unique_key: [<column>]    # checked for duplicates on every write
+  schema:
+    - name: <column>
+      type: <string | int | bigint | smallint | tinyint | double | float | decimal(p,s) | boolean | date | timestamp | binary>
+      nullable: false         # false: the write fails if this column holds a null
+# Optional, not used yet: owner, version, contact, description, classification, freshness.

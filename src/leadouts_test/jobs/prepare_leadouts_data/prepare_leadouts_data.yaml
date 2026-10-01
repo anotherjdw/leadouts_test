@@ -1,0 +1,36 @@
+# Job spec for the prepare_leadouts_data ETL job. Generation-time input; never deployed.
+# Fill in every value shaped like <...>. Unknown fields and leftover <...> values fail validation.
+# To delete this job, delete src/<package>/jobs/prepare_leadouts_data/ and its tests:
+# tests/unit/prepare_leadouts_data/, tests/integration/test_prepare_leadouts_data_integration.py,
+# tests/end_to_end/test_prepare_leadouts_data_e2e.py and tests/fixtures/prepare_leadouts_data/.
+job:
+  name: prepare_leadouts_data
+  description: <what this job produces, in one line>
+  glue:
+    worker_type: G.1X
+    number_of_workers: 2
+  processing:
+    type: lookback        # lookback | backfill (backfill takes --START_DATE and --END_DATE when a run starts)
+    lookback_days: 1      # complete days ending yesterday; 0 processes the current date only
+    # schedule: cron(0 6 * * ? *)   # optional; AWS cron, UTC; only for a job with no upstream job
+  sources:
+    - contract: <contract name, e.g. raw_orders for contracts/raw_orders_data_contract.yaml>
+      # job: <job name>   # instead of contract, to read another job's output; create that job first
+      alias: <snake_case name for this input, e.g. orders>
+      allow_empty: false  # true lets this source read no rows without failing the run
+  sink:
+    contract: prepare_leadouts_data   # the output contract: contracts/prepare_leadouts_data_data_contract.yaml
+    write_mode: overwrite     # the only mode: replaces the partitions present in the output
+    partition_key: <output date column, e.g. order_date; delete this line for an unpartitioned output>
+  transformations:
+    - name: <transformation_name>
+      description: >
+        <what this transformation does, at most 500 characters>
+      inputs: [<source alias or transformation name>]
+      # depends_on: [<transformation name>]   # needed when an input is another transformation
+      output:
+        grain_change: false
+        columns:            # columns this transformation adds; delete the block if none
+          - name: <column>
+            type: <type>
+        # removes_columns: [<column this transformation drops>]
