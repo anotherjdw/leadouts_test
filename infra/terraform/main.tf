@@ -7,7 +7,7 @@
 # targets them -- and do not edit between them: the next sync replaces it.
 
 locals {
-  name_prefix = "${var.data_product}-${var.environment}"
+  name_prefix   = "${var.data_product}-${var.environment}"
   bucket_prefix = replace(lower(local.name_prefix), "_", "-")
 }
 
