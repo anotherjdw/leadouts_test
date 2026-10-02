@@ -53,7 +53,10 @@ be created by the stack it applies.
    different bucket, change all three.
 3. Have the real GitHub `<owner>/<repo>` at hand -- `github_repo` has no default, and
    every role's trust policy is meaningless without it.
-4. Apply as an admin, with your own AWS credentials:
+4. Apply as an admin, with your own AWS credentials. This needs Terraform
+   1.10 or later (`terraform version`): both roots lock their state with the
+   S3 backend's `use_lockfile`, which earlier versions reject, and CI installs the same
+   version.
 
    ```bash
    cd infra/terraform/bootstrap
@@ -81,13 +84,22 @@ the `deploy` role manages). Routine deploys never touch this root.
 
 ## Notes
 
+- **Every trust policy accepts both forms GitHub uses to name the repository.** Depending
+  on the repo's OIDC settings, GitHub's token names it `repo:<owner>/<repo>` or, in its
+  immutable form, `repo:<owner>@<owner id>/<repo>@<repo id>` (newer repositories default
+  to the latter; `gh api repos/<owner>/<repo>/actions/oidc/customization/sub` shows which).
+  Both are built from `github_repo`, the ids matched by wildcards, so either works with no
+  other input. A bootstrap applied before this accepted only the first form, and CI's
+  `Configure AWS credentials` step failed with `Not authorized to perform
+  sts:AssumeRoleWithWebIdentity` in a repository using the second; re-apply it.
 - **The GitHub OIDC provider is account-wide.** AWS allows only one provider for
   `token.actions.githubusercontent.com` per account, so if your account already has one
   (another data product bootstrapped first), the first `apply` fails with
   `EntityAlreadyExists`. Import the existing provider into this state before applying:
 
   ```bash
-  terraform import aws_iam_openid_connect_provider.github <existing-provider-arn>
+  terraform import -var="github_repo=<owner>/<repo>" \
+    aws_iam_openid_connect_provider.github <existing-provider-arn>
   ```
 
 ## Teardown

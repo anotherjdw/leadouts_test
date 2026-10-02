@@ -8,6 +8,11 @@ data "aws_caller_identity" "current" {}
 locals {
   name_prefix = "${var.data_product}-${var.environment}"
 
+  # github_repo in GitHub's immutable subject format, repo:<owner>@<owner id>/<repo>@<repo id>,
+  # with the ids as wildcards. Repositories use this format or the plain owner/repo one,
+  # depending on their OIDC settings, so every trust policy accepts both.
+  github_repo_immutable = "${split("/", var.github_repo)[0]}@*/${split("/", var.github_repo)[1]}@*"
+
   scripts_bucket = var.scripts_bucket_name != "" ? var.scripts_bucket_name : "${local.name_prefix}-scripts"
 
   # State objects for this data product (both the main stack's key and this
@@ -65,6 +70,8 @@ data "aws_iam_policy_document" "plan_trust" {
       values = [
         "repo:${var.github_repo}:pull_request",
         "repo:${var.github_repo}:ref:refs/heads/main",
+        "repo:${local.github_repo_immutable}:pull_request",
+        "repo:${local.github_repo_immutable}:ref:refs/heads/main",
       ]
     }
   }
@@ -88,9 +95,12 @@ data "aws_iam_policy_document" "deploy_trust" {
 
     # Only a job bound to the "${var.environment}" Environment can assume deploy.
     condition {
-      test     = "StringEquals"
+      test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repo}:environment:${var.environment}"]
+      values = [
+        "repo:${var.github_repo}:environment:${var.environment}",
+        "repo:${local.github_repo_immutable}:environment:${var.environment}",
+      ]
     }
   }
 }
@@ -114,7 +124,10 @@ data "aws_iam_policy_document" "scripts_trust" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repo}:ref:refs/heads/main"]
+      values = [
+        "repo:${var.github_repo}:ref:refs/heads/main",
+        "repo:${local.github_repo_immutable}:ref:refs/heads/main",
+      ]
     }
   }
 }
