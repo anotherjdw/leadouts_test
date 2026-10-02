@@ -49,7 +49,21 @@ module "glue" {
   # ---------------------------------------------------------------------------
   # BEGIN ETL jobs and triggers (managed by engineering-automation -- do not edit by hand)
   # >>> AMEND:JOBS
-  jobs = {}
+  jobs = {
+    prepare_leadouts_data = {
+      glue = {
+        number_of_workers = 2
+        worker_type       = "G.1X"
+      }
+      arguments = {
+        END_DATE                     = "2026-01-01"
+        OUTPUT_PATH                  = "s3://${module.s3.bucket_names["preprocessed"]}/prepared_leadouts_data/"
+        PROCESSING_TYPE              = "backfill"
+        RAW_LEADOUTS_DATA_INPUT_PATH = "s3://${module.s3.bucket_names["raw"]}/raw_leadouts_data/"
+        START_DATE                   = "2026-01-01"
+      }
+    }
+  }
 
   scheduled_triggers = {}
 

@@ -2,11 +2,22 @@
 # never deployed. Fill in every value shaped like <...>.
 contract:
   layer: preprocessed
-  dataset: <folder name in the layer's bucket, e.g. orders_per_shop>
+  dataset: prepared_leadouts_data
   grain:
-    unique_key: [<column>]    # checked for duplicates on every write
+    unique_key: [click_id]    # checked for duplicates on every write
   schema:
-    - name: <column>
-      type: <string | int | bigint | smallint | tinyint | double | float | decimal(p,s) | boolean | date | timestamp | binary>
-      nullable: false         # false: the write fails if this column holds a null
-# Optional, not used yet: owner, version, contact, description, classification, freshness.
+    - name: click_id
+      type: string
+      nullable: false
+    - name: type
+      type: string
+      nullable: true
+    - name: price
+      type: decimal(10,2)
+      nullable: true
+    - name: shop_id
+      type: int
+      nullable: false
+    - name: date_utc
+      type: date
+      nullable: false

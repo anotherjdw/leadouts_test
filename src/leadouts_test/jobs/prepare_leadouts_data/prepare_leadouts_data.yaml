@@ -5,32 +5,50 @@
 # tests/end_to_end/test_prepare_leadouts_data_e2e.py and tests/fixtures/prepare_leadouts_data/.
 job:
   name: prepare_leadouts_data
-  description: <what this job produces, in one line>
+  description: converts raw json data into a preprocessed parquet file
   glue:
     worker_type: G.1X
     number_of_workers: 2
   processing:
-    type: lookback        # lookback | backfill (backfill takes --START_DATE and --END_DATE when a run starts)
-    lookback_days: 1      # complete days ending yesterday; 0 processes the current date only
+    type: backfill        # lookback | backfill
+    # lookback_days: 1      # lookback only: complete days ending yesterday; 0 processes the current date only
+    start_date: 2026-01-01   # YYYY-MM-DD; set both dates when type is backfill, neither for lookback
+    end_date: 2026-01-01     # backfill processes every day from start_date to end_date
     # schedule: cron(0 6 * * ? *)   # optional; AWS cron, UTC; only for a job with no upstream job
   sources:
-    - contract: <contract name, e.g. raw_orders for contracts/raw_orders_data_contract.yaml>
+    - contract: raw_leadouts_data
       # job: <job name>   # instead of contract, to read another job's output; create that job first
-      alias: <snake_case name for this input, e.g. orders>
+      alias: raw_leadouts_data
       allow_empty: false  # true lets this source read no rows without failing the run
   sink:
     contract: prepare_leadouts_data   # the output contract: contracts/prepare_leadouts_data_data_contract.yaml
     write_mode: overwrite     # the only mode: replaces the partitions present in the output
-    partition_key: <output date column, e.g. order_date; delete this line for an unpartitioned output>
+    partition_key: date_utc
   transformations:
-    - name: <transformation_name>
+    - name: convert column names to snake case
       description: >
-        <what this transformation does, at most 500 characters>
-      inputs: [<source alias or transformation name>]
+        Convert the camel case names of the columns to snake case (i.e., all capital letters to lower case, and separate words with underscores).
+      inputs: [raw_leadouts_data]
       # depends_on: [<transformation name>]   # needed when an input is another transformation
       output:
         grain_change: false
-        columns:            # columns this transformation adds; delete the block if none
-          - name: <column>
-            type: <type>
+        removes_columns: [ ClickId, Type, Price, ShopId, DateUTC ]
+        columns:
+          - name: click_id
+            type: string
+          - name: type
+            type: string
+          - name: price
+            type: int
+          - name: shop_id
+            type: int
+          - name: date_utc
+            type: date
         # removes_columns: [<column this transformation drops>]
+    - name: convert price to EUR
+      description: divide the values of the price column by 100 and convert the data type to decimal(10,2)
+      inputs: [ convert_column_names_to_snake_case ]
+      depends_on: [ convert_column_names_to_snake_case ]
+      output:
+        grain_change: false
+

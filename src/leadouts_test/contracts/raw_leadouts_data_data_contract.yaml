@@ -1,0 +1,24 @@
+# Source contract raw_leadouts_data: data no job in this project writes. Written by
+# `scaffold create-source-contracts` for prepare_leadouts_data. Describe the files exactly as they are on
+# disk. Generation-time input; never deployed.
+contract:
+  layer: raw                  # raw | preprocessed | processed
+  dataset: raw_leadouts_data
+  file_format: json
+  partition_key: DateUTC
+  schema:                     # include the partition column, typed date
+    - name: ClickId
+      type: string
+      nullable: false
+    - name: Type
+      type: string
+      nullable: true
+    - name: Price
+      type: int
+      nullable: true
+    - name: ShopId
+      type: int
+      nullable: false
+    - name: DateUTC
+      type: date
+      nullable: false
