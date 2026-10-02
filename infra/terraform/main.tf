@@ -8,6 +8,7 @@
 
 locals {
   name_prefix = "${var.data_product}-${var.environment}"
+  bucket_prefix = replace(lower(local.name_prefix), "_", "-")
 }
 
 # ---------------------------------------------------------------------------
@@ -17,7 +18,7 @@ locals {
 module "s3" {
   source = "./modules/s3"
 
-  name_prefix                        = local.name_prefix
+  name_prefix                        = local.bucket_prefix
   environment                        = var.environment
   bucket_names                       = var.bucket_names
   lifecycle_rules_enabled            = var.lifecycle_rules_enabled
