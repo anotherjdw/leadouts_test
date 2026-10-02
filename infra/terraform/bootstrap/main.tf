@@ -6,14 +6,15 @@
 data "aws_caller_identity" "current" {}
 
 locals {
-  name_prefix = "${var.data_product}-${var.environment}"
+  name_prefix   = "${var.data_product}-${var.environment}"
+  bucket_prefix = replace(lower(local.name_prefix), "_", "-")
 
   # github_repo in GitHub's immutable subject format, repo:<owner>@<owner id>/<repo>@<repo id>,
   # with the ids as wildcards. Repositories use this format or the plain owner/repo one,
   # depending on their OIDC settings, so every trust policy accepts both.
   github_repo_immutable = "${split("/", var.github_repo)[0]}@*/${split("/", var.github_repo)[1]}@*"
 
-  scripts_bucket = var.scripts_bucket_name != "" ? var.scripts_bucket_name : "${local.name_prefix}-scripts"
+  scripts_bucket = var.scripts_bucket_name != "" ? var.scripts_bucket_name : "${local.bucket_prefix}-scripts"
 
   # State objects for this data product (both the main stack's key and this
   # bootstrap root's key live under <data_product>/), including their
@@ -25,7 +26,7 @@ locals {
   account_id       = data.aws_caller_identity.current.account_id
   project_role     = "arn:aws:iam::${local.account_id}:role/${local.name_prefix}-*"
   project_policy   = "arn:aws:iam::${local.account_id}:policy/${local.name_prefix}-*"
-  project_buckets  = "arn:aws:s3:::${local.name_prefix}-*"
+  project_buckets  = "arn:aws:s3:::${local.bucket_prefix}-*"
   project_jobs     = "arn:aws:glue:*:${local.account_id}:job/${local.name_prefix}-*"
   project_triggers = "arn:aws:glue:*:${local.account_id}:trigger/${local.name_prefix}-*"
 }
