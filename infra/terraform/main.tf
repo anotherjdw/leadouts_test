@@ -51,24 +51,39 @@ module "glue" {
   # BEGIN ETL jobs and triggers (managed by engineering-automation -- do not edit by hand)
   # >>> AMEND:JOBS
   jobs = {
+    leadouts_summary = {
+      glue = {
+        number_of_workers = 2
+        worker_type       = "G.1X"
+      }
+      arguments = {
+        LOOKBACK_DAYS                    = "1"
+        OUTPUT_PATH                      = "s3://${module.s3.bucket_names["processed"]}/leadouts_summary/"
+        PREPARE_LEADOUTS_DATA_INPUT_PATH = "s3://${module.s3.bucket_names["preprocessed"]}/prepared_leadouts_data/"
+        PROCESSING_TYPE                  = "lookback"
+      }
+    }
     prepare_leadouts_data = {
       glue = {
         number_of_workers = 2
         worker_type       = "G.1X"
       }
       arguments = {
-        END_DATE                     = "2026-01-01"
+        LOOKBACK_DAYS                = "1"
         OUTPUT_PATH                  = "s3://${module.s3.bucket_names["preprocessed"]}/prepared_leadouts_data/"
-        PROCESSING_TYPE              = "backfill"
+        PROCESSING_TYPE              = "lookback"
         RAW_LEADOUTS_DATA_INPUT_PATH = "s3://${module.s3.bucket_names["raw"]}/raw_leadouts_data/"
-        START_DATE                   = "2026-01-01"
       }
     }
   }
 
-  scheduled_triggers = {}
+  scheduled_triggers = {
+    prepare_leadouts_data = "cron(0 6 * * ? *)"
+  }
 
-  conditional_triggers = {}
+  conditional_triggers = {
+    leadouts_summary = "prepare_leadouts_data"
+  }
   # <<< AMEND:JOBS
   # END ETL jobs and triggers
   # ---------------------------------------------------------------------------

@@ -1,0 +1,18 @@
+# Output contract of the leadouts_summary ETL job: the dataset it writes. Generation-time input;
+# never deployed. Fill in every value shaped like <...>.
+contract:
+  layer: processed
+  dataset: leadouts_summary
+  grain:
+    unique_key: [date_utc, shop_id]    # checked for duplicates on every write
+  schema:
+    - name: date_utc
+      type: date
+      nullable: false         # false: the write fails if this column holds a null
+    - name: shop_id
+      type: int
+      nullable: false
+    - name: leadouts
+      type: int
+      nullable: false
+# Optional, not used yet: owner, version, contact, description, classification, freshness.

@@ -10,11 +10,11 @@ job:
     worker_type: G.1X
     number_of_workers: 2
   processing:
-    type: backfill        # lookback | backfill
-    # lookback_days: 1      # lookback only: complete days ending yesterday; 0 processes the current date only
-    start_date: 2026-01-01   # YYYY-MM-DD; set both dates when type is backfill, neither for lookback
-    end_date: 2026-01-01     # backfill processes every day from start_date to end_date
-    # schedule: cron(0 6 * * ? *)   # optional; AWS cron, UTC; only for a job with no upstream job
+    type: lookback        # lookback | backfill
+    lookback_days: 1      # lookback only: complete days ending yesterday; 0 processes the current date only
+    # start_date: 2026-01-01   # YYYY-MM-DD; set both dates when type is backfill, neither for lookback
+    # end_date: 2026-01-01     # backfill processes every day from start_date to end_date
+    schedule: cron(0 6 * * ? *)   # optional; AWS cron, UTC; only for a job with no upstream job
   sources:
     - contract: raw_leadouts_data
       # job: <job name>   # instead of contract, to read another job's output; create that job first

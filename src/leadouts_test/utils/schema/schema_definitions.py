@@ -13,6 +13,14 @@ from pyspark.sql.types import (
     StructType,
 )
 
+leadouts_summary_schema = StructType(
+    [
+        StructField("date_utc", DateType(), nullable=False),
+        StructField("shop_id", IntegerType(), nullable=False),
+        StructField("leadouts", IntegerType(), nullable=False),
+    ]
+)
+
 prepare_leadouts_data_schema = StructType(
     [
         StructField("click_id", StringType(), nullable=False),

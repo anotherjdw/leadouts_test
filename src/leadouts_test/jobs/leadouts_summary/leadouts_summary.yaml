@@ -1,0 +1,54 @@
+# Job spec for the leadouts_summary ETL job. Generation-time input; never deployed.
+# Fill in every value shaped like <...>. Unknown fields and leftover <...> values fail validation.
+# To delete this job, delete src/<package>/jobs/leadouts_summary/ and its tests:
+# tests/unit/leadouts_summary/, tests/integration/test_leadouts_summary_integration.py,
+# tests/end_to_end/test_leadouts_summary_e2e.py and tests/fixtures/leadouts_summary/.
+job:
+  name: leadouts_summary
+  description: count of leadouts by shop and date
+  glue:
+    worker_type: G.1X
+    number_of_workers: 2
+  processing:
+    type: lookback        # lookback | backfill
+    lookback_days: 1      # lookback only: complete days ending yesterday; 0 processes the current date only
+    # start_date: 2026-01-01   # YYYY-MM-DD; set both dates when type is backfill, neither for lookback
+    # end_date: 2026-01-01     # backfill processes every day from start_date to end_date
+    # schedule: cron(0 6 * * ? *)   # optional; AWS cron, UTC; only for a job with no upstream job
+  sources:
+    # - contract: <contract name, e.g. raw_orders for contracts/raw_orders_data_contract.yaml>
+    - job: prepare_leadouts_data   # instead of contract, to read another job's output; create that job first
+      alias: prepare_leadouts_data
+      allow_empty: false  # true lets this source read no rows without failing the run
+  sink:
+    contract: leadouts_summary   # the output contract: contracts/leadouts_summary_data_contract.yaml
+    write_mode: overwrite     # the only mode: replaces the partitions present in the output
+    partition_key: date_utc
+  transformations:
+    - name: filter leadouts
+      description: >
+        remove rows where the type is either 'ad' or 'rating'
+      # inputs: the DataFrames this transformation takes, in order; each becomes a parameter.
+      # An input is a source alias, or the name of another transformation to take its output.
+      # Names are written as `name:` is: lower case, spaces and hyphens become underscores.
+      inputs: [prepare_leadouts_data]
+      # depends_on: [<transformation name>]   # list every transformation named in inputs
+      # output: the result has its inputs' columns, minus removes_columns, plus columns; the
+      # description is not read for this. To rename a column, list its old name under
+      # removes_columns and its new name, with its type, under columns.
+      output:
+        grain_change: false
+        # removes_columns: [<column this transformation drops>]
+    - name: group leadouts
+      description: group leadouts by date_utc and shop_id, and distinctly count the click_id values, with the dimension called 'leadouts'.
+      inputs: [filter_leadouts]
+      depends_on: [filter_leadouts]
+      output:
+        grain_change: true # if grain_change is true, do not use removes_columns. name the full list of the new output
+        columns:
+          - name: date_utc
+            type: date
+          - name: shop_id
+            type: int
+          - name: leadouts
+            type: int
