@@ -49,36 +49,36 @@ resource "aws_glue_job" "etl" {
   tags = local.common_tags
 }
 
-resource "aws_glue_trigger" "scheduled" {
-  for_each = var.scheduled_triggers
-
-  name     = "${var.name_prefix}-${each.key}-scheduled"
-  type     = "SCHEDULED"
-  schedule = each.value
-
-  actions {
-    job_name = aws_glue_job.etl[each.key].name
-  }
-
-  tags = local.common_tags
-}
-
-resource "aws_glue_trigger" "conditional" {
-  for_each = var.conditional_triggers
-
-  name = "${var.name_prefix}-${each.key}-after-${each.value}"
-  type = "CONDITIONAL"
-
-  predicate {
-    conditions {
-      job_name = aws_glue_job.etl[each.value].name
-      state    = "SUCCEEDED"
-    }
-  }
-
-  actions {
-    job_name = aws_glue_job.etl[each.key].name
-  }
-
-  tags = local.common_tags
-}
+# resource "aws_glue_trigger" "scheduled" {
+#   for_each = var.scheduled_triggers
+#
+#   name     = "${var.name_prefix}-${each.key}-scheduled"
+#   type     = "SCHEDULED"
+#   schedule = each.value
+#
+#   actions {
+#     job_name = aws_glue_job.etl[each.key].name
+#   }
+#
+#   tags = local.common_tags
+# }
+#
+# resource "aws_glue_trigger" "conditional" {
+#   for_each = var.conditional_triggers
+#
+#   name = "${var.name_prefix}-${each.key}-after-${each.value}"
+#   type = "CONDITIONAL"
+#
+#   predicate {
+#     conditions {
+#       job_name = aws_glue_job.etl[each.value].name
+#       state    = "SUCCEEDED"
+#     }
+#   }
+#
+#   actions {
+#     job_name = aws_glue_job.etl[each.key].name
+#   }
+#
+#   tags = local.common_tags
+# }

@@ -78,11 +78,11 @@ module "glue" {
   }
 
   scheduled_triggers = {
-    prepare_leadouts_data = "cron(0 6 * * ? *)"
+    # prepare_leadouts_data = "cron(0 6 * * ? *)"
   }
 
   conditional_triggers = {
-    leadouts_summary = "prepare_leadouts_data"
+    # leadouts_summary = "prepare_leadouts_data"
   }
   # <<< AMEND:JOBS
   # END ETL jobs and triggers
